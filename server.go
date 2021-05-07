@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/truongcongminh96/graphql-golang-example/graph"
 	"github.com/truongcongminh96/graphql-golang-example/graph/generated"
+	"github.com/truongcongminh96/graphql-golang-example/internal/auth"
 	database "github.com/truongcongminh96/graphql-golang-example/internal/pkg/db/mysql"
 )
 
@@ -22,6 +23,8 @@ func main() {
 	}
 
 	router := chi.NewRouter()
+
+	router.Use(auth.Middleware())
 
 	database.InitDB()
 	database.Migrate()
