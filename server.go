@@ -14,7 +14,7 @@ import (
 	database "github.com/truongcongminh96/graphql-golang-example/internal/pkg/db/mysql"
 )
 
-const defaultPort = "8081"
+const defaultPort = "8080"
 
 func main() {
 	port := os.Getenv("PORT")
