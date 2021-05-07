@@ -6,23 +6,35 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/truongcongminh96/graphql-golang-example/internal/pkg/jwt"
-	"github.com/truongcongminh96/graphql-golang-example/internal/users"
 	"strconv"
 
 	"github.com/truongcongminh96/graphql-golang-example/graph/generated"
 	"github.com/truongcongminh96/graphql-golang-example/graph/model"
+	"github.com/truongcongminh96/graphql-golang-example/internal/auth"
 	"github.com/truongcongminh96/graphql-golang-example/internal/links"
+	"github.com/truongcongminh96/graphql-golang-example/internal/pkg/jwt"
+	"github.com/truongcongminh96/graphql-golang-example/internal/users"
 )
 
 func (r *mutationResolver) CreateLink(ctx context.Context, input model.NewLink) (*model.Link, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return &model.Link{}, fmt.Errorf("access denied")
+	}
+
 	var link links.Link
 
 	link.Title = input.Title
 	link.Address = input.Address
+	link.User = user
 	linkID := link.Save()
 
-	return &model.Link{ID: strconv.FormatInt(linkID, 10), Title: link.Title, Address: link.Address}, nil
+	grahpqlUser := &model.User{
+		ID:   user.ID,
+		Name: user.Username,
+	}
+
+	return &model.Link{ID: strconv.FormatInt(linkID, 10), Title: link.Title, Address: link.Address, User: grahpqlUser}, nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (string, error) {
@@ -72,7 +84,11 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 	dbLinks = links.GetAll()
 
 	for _, link := range dbLinks {
-		resultLinks = append(resultLinks, &model.Link{ID: link.ID, Title: link.Title, Address: link.Address})
+		grahpqlUser := &model.User{
+			ID:   link.User.ID,
+			Name: link.User.Username,
+		}
+		resultLinks = append(resultLinks, &model.Link{ID: link.ID, Title: link.Title, Address: link.Address, User: grahpqlUser})
 	}
 
 	return resultLinks, nil
